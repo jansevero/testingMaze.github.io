@@ -1,0 +1,484 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Jogo - Testes</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+    var config = {
+        type: Phaser.AUTO,
+        width: 1100,
+        height: 640,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                debug: false
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    var player;
+    var pause = false;
+    var keyCount = 0;
+    var keyTemp = 0;
+    var treasureCount =  [false, false, false, false];
+    var treasurePoints = 0;
+    var ctState = [false, false, false, false, false, false, false, false, false, false];
+    var ctCount = 0;
+    var trap1 = false;
+    var trap2 = false;
+    var currentTreasure = 0;
+    var gameOver = false;
+
+    var game = new Phaser.Game(config);
+
+    function preload ()
+    {
+        //separar preload depois
+        this.load.image('floor', 'assets/images/floor.png');
+        this.load.image('info', 'assets/images/info.png');
+        this.load.image('infoSenha', 'assets/images/infoSenha.png');
+        this.load.image('senha1', 'assets/images/1.png');
+        this.load.image('senha2', 'assets/images/2.png');
+        this.load.image('senha3', 'assets/images/3.png');
+        this.load.image('senha4', 'assets/images/4.png');
+        this.load.image('CT01', 'assets/images/CT01.png');
+        this.load.image('CT02', 'assets/images/CT02.png');
+        this.load.image('CT03', 'assets/images/CT03.png');
+        this.load.image('CT04', 'assets/images/CT04.png');
+        this.load.image('CT05', 'assets/images/CT05.png');
+        this.load.image('CT06', 'assets/images/CT06.png');
+        this.load.image('CT07', 'assets/images/CT07.png');
+        this.load.image('CT08', 'assets/images/CT08.png');
+        this.load.image('CT09', 'assets/images/CT09.png');
+        this.load.image('CT10', 'assets/images/CT10.png');
+        this.load.image('iconCT01', 'assets/images/iconCT01.png');
+        this.load.image('iconCT02', 'assets/images/iconCT02.png');
+        this.load.image('iconCT03', 'assets/images/iconCT03.png');
+        this.load.image('iconCT04', 'assets/images/iconCT04.png');
+        this.load.image('iconCT05', 'assets/images/iconCT05.png');
+        this.load.image('iconCT06', 'assets/images/iconCT06.png');
+        this.load.image('iconCT07', 'assets/images/iconCT07.png');
+        this.load.image('iconCT08', 'assets/images/iconCT08.png');
+        this.load.image('iconCT09', 'assets/images/iconCT09.png');
+        this.load.image('iconCT10', 'assets/images/iconCT10.png');
+        this.load.image('fim1', 'assets/images/infoFim1.png');
+        this.load.image('fim2', 'assets/images/infoFim2.png');
+        this.load.image('repeat', 'assets/icons/seta-de-repeticao.png');
+        this.load.image('treasure', 'assets/sprites/treasure.png');
+        this.load.image('treasure1', 'assets/sprites/treasure1.png');
+        this.load.image('treasure2', 'assets/sprites/treasure2.png');
+        this.load.image('treasureBox', 'assets/sprites/box.png');
+        this.load.image('treasureBox3', 'assets/sprites/box3.png');
+        this.load.image('treasureBox4', 'assets/sprites/box4.png');
+        this.load.image('treasureKey', 'assets/sprites/key.png');
+        this.load.image('trap', 'assets/sprites/trap.png');
+        this.load.image('player', 'assets/sprites/player.png');
+        this.load.image('collideVertical', 'assets/sprites/collideVertical.png');
+        this.load.image('collideHorizontal', 'assets/sprites/collideHorizontal.png');
+        this.load.image('tiles01', 'assets/tilesets/Yellow Dungeon Tileset v1.1.1/Yellow Dungeon Tileset.png');
+        this.load.image('tiles02', 'assets/tilesets/Yellow Dungeon Tileset v1.1.1/Yellow Brick Floor.png');
+        this.load.tilemapTiledJSON('dungeon03', 'assets/tilesets/Yellow Dungeon Tileset v1.1.1/dungeon03.json');
+    }
+
+    function create ()
+    {
+        //dungeon
+        this.add.image(950, 320, 'info');
+        const map = this.make.tilemap({ key: 'dungeon03' });
+        const tileset01 = map.addTilesetImage('dungeon01', 'tiles01');
+        const tileset02 = map.addTilesetImage('dungeon02', 'tiles02');
+
+        map.createStaticLayer('floor', tileset02);
+        const wallsLayer = map.createStaticLayer('walls', tileset01);
+        wallsLayer.setCollision([1, 2, 2, 3, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 12, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 28, 12, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 1, 0, 0, 0, 0, 0, 0, 0, 0, 14, 28, 12, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 1, 0, 0, 0, 0, 0, 0, 0, 0, 14, 28, 12, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 1, 0, 0, 0, 15, 24, 24, 24, 24, 25, 28, 12, 0, 0, 26, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 23, 24, 24, 24, 24, 24, 24, 24, 24, 22, 0, 0, 0, 14, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 1, 2, 2, 3, 28, 28, 28, 28, 12, 0, 0, 0, 14, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 12, 0, 0, 14, 28, 28, 28, 28, 12, 0, 0, 0, 14, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 12, 0, 0, 14, 28, 28, 28, 28, 12, 0, 0, 0, 14, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 12, 0, 0, 14, 28, 28, 28, 28, 12, 0, 0, 0, 14, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 12, 0, 0, 26, 2, 2, 2, 2, 27, 0, 0, 0, 26, 27, 0, 0, 0, 26, 2, 2, 2, 2, 2, 3, 28, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 28, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 28, 23, 24, 24, 24, 24, 24, 24, 24, 22, 0, 0, 0, 21, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 25, 28, 28, 28, 28, 28, 28, 28, 28, 28, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 12, 0, 0, 0, 14, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 23, 24, 24, 24, 25, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28]);
+
+        //infoSenha
+        infoSenha = this.physics.add.staticGroup();
+        //this.add.image(420, 320, 'infoSenha');
+        senhas = this.physics.add.staticGroup();
+
+        //CTs
+        ct = this.physics.add.image(950, 200, 'CT01');
+
+        //CTs ícones
+        iconCT01 = this.add.image(830 , 420, 'iconCT01').setInteractive()
+            .on('pointerdown', () => changeCT(1));
+        iconCT02 = this.add.image(890 , 420, 'iconCT02').setInteractive()
+            .on('pointerdown', () => changeCT(2));
+        iconCT03 = this.add.image(950 , 420, 'iconCT03').setInteractive()
+            .on('pointerdown', () => changeCT(3));
+        iconCT04 = this.add.image(1010 , 420, 'iconCT04').setInteractive()
+            .on('pointerdown', () => changeCT(4));
+        iconCT05 = this.add.image(1070 , 420, 'iconCT05').setInteractive()
+            .on('pointerdown', () => changeCT(5));
+        iconCT06 = this.add.image(830 , 470, 'iconCT06').setInteractive()
+            .on('pointerdown', () => changeCT(6));
+        iconCT07 = this.add.image(890 , 470, 'iconCT07').setInteractive()
+            .on('pointerdown', () => changeCT(7));
+        iconCT08 = this.add.image(950 , 470, 'iconCT08').setInteractive()
+            .on('pointerdown', () => changeCT(8));
+        iconCT09 = this.add.image(1010 , 470, 'iconCT09').setInteractive()
+            .on('pointerdown', () => changeCT(9));
+        iconCT10 = this.add.image(1070 , 470, 'iconCT10').setInteractive()
+            .on('pointerdown', () => changeCT(10));
+
+        //ícone repeat
+        const repeatButton = this.add.image(840 , 600, 'repeat').setScale(0.1)
+            .setInteractive()
+            .on('pointerdown', () => returnPlayer());
+        //const repeatButton = this.physics.add.image(840 , 600, 'repeat').setScale(0.1);
+        //repeatButton.onInputUp.add(returnPlayer, this);
+
+        /*debugGraphics = this.add.graphics().setAlpha(0.7)
+        wallsLayer.renderDebug(debugGraphics, {tileColor : null, collidingTileColor: new Phaser.Display.Color(243, 234, 48, 255), faceColor: new Phaser.Display.Color(40, 39, 37, 255)})*/
+
+        //objetos
+        treasures = this.physics.add.staticGroup();
+        treasures.create(95, 350, 'treasureBox3'); //1 - 3
+        treasures.create(740, 480, 'treasure2'); //2 - 2
+        treasures.create(65, 65, 'treasure1'); //3 - 1
+        treasures.create(700, 100, 'treasureBox4'); //4 - 4
+        treasureKeys = this.physics.add.group();
+        treasureKeys.create(650, 480, 'treasureKey');
+
+        //armadilhas
+        trapZones = this.physics.add.group();
+        trapZones.create(266, 477, 'collideVertical'); //1
+        trapZones.create(476, 477, 'collideVertical'); //2
+        trapZones.create(636, 477, 'collideVertical'); //3
+        trapZones.create(368, 386, 'collideHorizontal'); //4
+        trapZones.create(528, 386, 'collideHorizontal'); //5
+        traps = this.physics.add.staticGroup();
+
+        //player
+        player = this.physics.add.image(370, 560, 'player');
+        player.setCollideWorldBounds(true);
+        player.body.setSize(32, 32);
+        player.body.setOffset(0, 32);
+
+        //cria input do teclado
+        cursors = this.input.keyboard.createCursorKeys();
+
+        //colisoes
+        this.physics.add.collider(player, wallsLayer);
+        this.physics.add.collider(player, traps);
+        this.physics.add.overlap(player, treasures, collectTreasure, null, this);
+        this.physics.add.collider(player, treasures);
+        this.physics.add.overlap(player, treasureKeys, collectKey, null, this);
+        this.physics.add.overlap(player, trapZones, activateTrap, null, this);
+
+        //zonas de armadilha
+        /*var rect1 = new Phaser.Geom.Rectangle(250, 445, 32, 64);
+        var rect2 = new Phaser.Geom.Rectangle(460, 445, 32, 64);
+        var rect3 = new Phaser.Geom.Rectangle(620, 445, 32, 64);
+        var rect4 = new Phaser.Geom.Rectangle(320, 370, 96, 32);
+        var rect5 = new Phaser.Geom.Rectangle(480, 370, 96, 32);
+        var graphics = this.add.graphics();
+
+        graphics.lineStyle(1, 0x00ff00, 1);
+
+        graphics.strokeRectShape(rect1);
+        graphics.strokeRectShape(rect2);
+        graphics.strokeRectShape(rect3);
+        graphics.strokeRectShape(rect4);
+        graphics.strokeRectShape(rect5);*/
+    }
+
+    function update ()
+    {
+        if(treasurePoints == 4){
+            if(ctCount == 10){
+                infoSenha.create(420, 320, 'fim2');
+            } else {
+                infoSenha.create(420, 320, 'fim1');
+            }
+            return;
+        }
+        if(!pause)
+            playerMove();
+    }
+
+    function playerMove () 
+    {
+        //horizontal
+        if (cursors.left.isDown) {
+            player.setVelocityX(-150);
+        } else if (cursors.right.isDown) {
+            player.setVelocityX(150);
+        } else {
+            player.setVelocityX(0);
+        }
+        //vertical
+        if (cursors.up.isDown) {
+            player.setVelocityY(-150);
+        } else if (cursors.down.isDown) {
+            player.setVelocityY(150);
+        } else {
+            player.setVelocityY(0);
+        }       
+    }
+
+    function collectTreasure(player, treasure)
+    {
+        switch(treasure.x){
+            //1 - 3
+            case 95: 
+                if(keyCount > 0){
+                    pause = true;
+                    infoSenha.create(420, 320, 'infoSenha');
+                    senhas.create(340, 350, 'senha2').setInteractive().on('pointerdown', () => collectTreasure2(treasure, 1, 2));
+                    senhas.create(500, 350, 'senha3').setInteractive().on('pointerdown', () => collectTreasure2(treasure, 1, 3));
+                } else { //ct07
+                    if(!ctState[6]){
+                        ctState[6] = true;
+                        ctCount += 1;
+                        console.log(ctState);
+                        console.log(ctCount);
+                        iconCT07.setAlpha(0.5);
+                    }
+                    returnPlayer();
+                }
+            break;
+            //2 - 2
+            case 740: 
+                pause = true;
+                infoSenha.create(420, 320, 'infoSenha');
+                senhas.create(340, 350, 'senha3').setInteractive().on('pointerdown', () => collectTreasure2(treasure, 2, 3));
+                senhas.create(500, 350, 'senha4').setInteractive().on('pointerdown', () => collectTreasure2(treasure, 2, 4));
+            break;
+            //3 - 1
+            case 65:
+                pause = true;
+                infoSenha.create(420, 320, 'infoSenha');
+                senhas.create(340, 350, 'senha1').setInteractive().on('pointerdown', () => collectTreasure2(treasure, 3, 1));
+                senhas.create(500, 350, 'senha4').setInteractive().on('pointerdown', () => collectTreasure2(treasure, 3, 4));
+            break;
+            //4 - 4
+            case 700:
+                if(keyCount > 0) { //ct08
+                    pause = true;
+                    infoSenha.create(420, 320, 'infoSenha');
+                    senhas.create(340, 350, 'senha1').setInteractive().on('pointerdown', () => collectTreasure2(treasure, 4, 1));
+                    senhas.create(500, 350, 'senha2').setInteractive().on('pointerdown', () => collectTreasure2(treasure, 4, 2));
+                } else { //ct10
+                    if(!ctState[9]){
+                        ctState[9] = true;
+                        ctCount += 1;
+                        console.log(ctState);
+                        console.log(ctCount);
+                        iconCT10.setAlpha(0.5);
+                    }
+                    returnPlayer();
+                }
+            break;
+        }
+    }
+
+    function collectKey(player, key)
+    {
+        key.disableBody(true, true);
+        keyCount += 1;
+        //console.log('chaves: '+keyTemp);
+    }
+
+    function activateTrap(player, zone)
+    {
+        switch(zone.x){
+            case 266: //1
+                if(!trap1){
+                    traps.create(369, 480, 'trap'); 
+                    trap1 = true;
+                }
+            break;
+            case 476: //2
+                if(!trap1){
+                    traps.create(369, 480, 'trap'); 
+                    trap1 = true;
+                }
+            break;
+            case 636: //3
+                if(!trap2){
+                    traps.create(529, 463, 'trap'); 
+                    trap2 = true;
+                }
+            break;
+            case 368: //4
+                if(!trap1){
+                    traps.create(369, 480, 'trap'); 
+                    trap2 = true;
+                }
+            break;
+            case 528: //5
+                if(!trap2){
+                    traps.create(529, 463, 'trap'); 
+                    trap2 = true;
+                }
+            break;
+        }
+    }
+
+    function returnPlayer()
+    {
+        player.setPosition(370, 560);
+        traps.clear(true, true);
+        senhas.clear(true, true);
+        infoSenha.clear(true, true);
+        trap1 = false;
+        trap2 = false;
+        /*if((keyCount == 0) && (keyTemp == 1)){
+            treasureKeys.create(650, 480, 'treasureKey');
+        }*/
+    }
+
+    function collectTreasure2(treasure, currentTreasure, password)
+    {
+        pause = false;
+        switch(currentTreasure){
+            case 1:
+                if(password == 2){ //ct05
+                    treasure.disableBody(true, true);
+                    treasureCount[0] = true;
+                    treasurePoints += 1;
+                    ctState[4] = true;
+                    ctCount += 1;
+                    console.log(ctState);
+                    console.log(ctCount);
+                    iconCT05.setAlpha(0.5);
+                    returnPlayer();
+                } else { //ct06
+                    if(!ctState[5]){
+                        ctState[5] = true;
+                        ctCount += 1;
+                        console.log(ctState);
+                        console.log(ctCount);
+                        iconCT06.setAlpha(0.5);
+                    }
+                    returnPlayer();
+                }
+            break;
+            case 2:
+                if(password == 3){ //ct03
+                    treasure.disableBody(true, true);
+                    treasureCount[1] = true;
+                    treasurePoints += 1;
+                    ctState[2] = true;
+                    ctCount += 1;
+                    console.log(ctState);
+                    console.log(ctCount);
+                    iconCT03.setAlpha(0.5);
+                    returnPlayer();
+                } else { //ct04
+                    if(!ctState[3]){
+                        ctState[3] = true;
+                        ctCount += 1;
+                        console.log(ctState);
+                        console.log(ctCount);
+                        iconCT04.setAlpha(0.5);
+                    }
+                    returnPlayer();
+                }
+                
+            break;
+            case 3:
+                if(password == 4){ //ct01
+                    treasure.disableBody(true, true);
+                    treasureCount[2] = true;
+                    treasurePoints += 1;
+                    ctState[0] = true;
+                    ctCount += 1;
+                    console.log(ctState);
+                    console.log(ctCount);
+                    iconCT01.setAlpha(0.5);
+                    returnPlayer();
+                } else { //ct02
+                    if(!ctState[1]){
+                        ctState[1] = true;
+                        ctCount += 1;
+                        console.log(ctState);
+                        console.log(ctCount);
+                        iconCT02.setAlpha(0.5);
+                    }
+                    returnPlayer();                   
+                }
+            break;
+            case 4:
+                if(password == 1){ //ct08
+                    treasure.disableBody(true, true);
+                    treasureCount[3] = true;
+                    treasurePoints += 1;
+                    ctState[7] = true;
+                    ctCount += 1;
+                    console.log(ctState);
+                    console.log(ctCount);
+                    iconCT08.setAlpha(0.5);
+                    returnPlayer();
+                } else { //ct09
+                    if(!ctState[8]){
+                        ctState[8] = true;
+                        ctCount += 1;
+                        console.log(ctState);
+                        console.log(ctCount);
+                        iconCT09.setAlpha(0.5);
+                    }
+                    returnPlayer();
+                }
+            break;
+        }
+        
+    }
+
+    function changeCT(currentCT)
+    {
+        switch(currentCT)
+        {
+            case 1:
+                ct.setTexture('CT01');
+            break;
+            case 2:
+                ct.setTexture('CT02');
+            break;
+            case 3:
+                ct.setTexture('CT03');
+            break;
+            case 4:
+                ct.setTexture('CT04');
+            break;
+            case 5:
+                ct.setTexture('CT05');
+            break;
+            case 6:
+                ct.setTexture('CT06');
+            break;
+            case 7:
+                ct.setTexture('CT07');
+            break;
+            case 8:
+                ct.setTexture('CT08');
+            break;
+            case 9:
+                ct.setTexture('CT09');
+            break;
+            case 10:
+                ct.setTexture('CT10');
+            break;
+        }
+    }
+</script>
+
+</body>
+</html>
